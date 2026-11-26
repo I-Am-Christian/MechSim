@@ -1,0 +1,27 @@
+// Original fictional campaign definitions. All values are game balance parameters.
+export const FACTIONS=[
+["Union","Terran Union","#80a9db","Industrial republic"],["Vanguard","Vanguard Directorate","#d37b65","Militarized frontier"],["Hive","Chitin Swarm","#b4c95c","Alien hive organisms"],["Astra","Astra Combine","#b7a1e8","Research collective"],["Nomad","Nomad Clans","#d7ae73","Independent fleets"],["Helix","Helix Consortium","#80d9c8","Mining corporations"],["Crimson","Crimson Pact","#d96b85","Mercenary rival"],["Zenith","Zenith Dominion","#b5c6e5","High-tech empire"],["Free","Free Worlds","#95bb89","Frontier settlements"],["Null","Null Constructs","#a2a9b4","Autonomous machine network"]
+].map(([id,name,color,desc])=>({id,name,color,desc}));
+export const CHASSIS=[
+["Scout","Kestrel",0,0,70,12,1.7,"mech"],["Striker","Valkyrie",1800,8,105,9,2.1,"mech"],["Bulwark","Bastion",4200,20,180,6,2.7,"mech"],["Ranger","Longbow",3200,15,115,8,2.3,"mech"],["Titan","Leviathan",7800,40,270,4.8,3.4,"mech"],["Tank","Mammoth",2400,12,150,8,1.65,"tank"],["Hover","Wraith",3900,25,110,13,1.5,"tank"],["Prototype","Your experimental chassis",6500,35,235,10,2.9,"mech"]
+].map(([id,name,cost,rep,hp,speed,size,kind])=>({id,name,cost,rep,hp,speed,size,kind}));
+export const WEAPONS=[
+["Pulse","Pulse cannon",0,13,.20,90,5],["Autocannon","Autocannon",550,29,.52,120,13],["Laser","Beam lance",800,42,.8,145,19],["Missile","Missile rack",1100,70,1.35,130,24],["Rail","Rail driver",1800,100,1.8,190,31],["Mining","Mining beam",300,8,.22,36,4]
+].map(([id,name,cost,dmg,rate,range,heat])=>({id,name,cost,dmg,rate,range,heat}));
+export const MODULES=[["armor","Armor plating",600,18],["reactor","Heat exchanger",750,20],["thrusters","Mobility servos",850,15],["eject","Escape capsule",500,10],["overload","Emergency reactor overload",1000,30]];
+export const SHIP=[["reactor","FTL reactor",800,20],["fuel","Fuel tanks",500,12],["bombard","Orbital weapons",1000,25],["hangar","Repair bay",900,22],["lab","Research lab",1200,30],["refinery","Ore refinery",650,18]];
+export const BASES=[["turret","Defense turret",250,10],["refinery","Mining extractor",350,15],["repair","Field repair station",300,12],["hab","Forward command post",400,20]];
+export const TYPES=[["hunt","Extermination", "Eliminate hostile units."],["raid","Stronghold raid","Destroy hostile command structures."],["mine","Cave expedition","Extract ore from alien cave deposits, then evacuate."],["defend","Hold the line","Survive enemy waves and defend your outpost."],["salvage","Salvage recovery","Recover wreck components and evacuate."]];
+export const BIOMES=["Dust flats","Glacial valley","Fungal wilderness","Basalt badlands","Verdant moon","Crystalline caves"];
+export function seeded(seed){return ()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}}
+export function galaxy(){let r=seeded(7712),names=["Acheron","Vesper","Kepler","Orion","Nyx","Sable","Eos","Helios","Draco","Talos","Nereid","Aquila"],arr=[];for(let i=0;i<100;i++){let arm=i%4,t=.4+Math.floor(i/4)*.245,rad=45+Math.floor(i/4)*10+10*r(),a=t+arm*Math.PI/2;arr.push({id:i,name:names[i%12]+" "+(1+Math.floor(i/12)),x:400+Math.cos(a)*rad,y:320+Math.sin(a)*rad*.78,faction:FACTIONS[Math.floor(r()*10)].id,biome:BIOMES[Math.floor(r()*BIOMES.length)],rich:1+Math.floor(r()*4),danger:1+Math.floor(r()*5)})}arr[0]={...arr[0],name:"Port Meridian",faction:"Union",danger:1};return arr}
+export const SYSTEMS=galaxy();
+export function fuelCost(a,b,reactor=0){return a.id===b.id?0:Math.max(1,Math.ceil(Math.hypot(a.x-b.x,a.y-b.y)/36/(1+reactor*.20)))}
+export function contractSet(system,day){let r=seeded(system.id*1337+day*731+5);return TYPES.map(([type,title,desc],i)=>{let f=FACTIONS.find(x=>x.id===system.faction),enemy=FACTIONS.filter(x=>x.id!==f.id)[Math.floor(r()*9)];if(type==="hunt"||type==="mine")enemy=FACTIONS[2];let tier=Math.min(5,Math.max(1,system.danger+Math.floor(r()*3)-1));return {id:system.id+"-"+day+"-"+i,type,title,desc,client:f.id,enemy:enemy.id,tier,reward:Math.round((500+tier*250+(type==="mine"?200:0))/50)*50,ore:8+tier*5,target:type==="mine"?5+tier:type==="defend"?60+tier*12:type==="salvage"?4+tier:5+tier*3}})}
+export const mech=(id="Scout",name="Kestrel",left="Pulse",right="Pulse")=>({id,name,left,right,armor:0,reactor:0,thrusters:0,eject:1,overload:0,condition:1});
+export function fresh(){return {version:1,credits:2600,ore:35,fuel:22,day:1,system:0,rep:Object.fromEntries(FACTIONS.map(f=>[f.id,0])),ship:Object.fromEntries(SHIP.map(m=>[m[0],0])),squad:[mech("Scout","Commander"),mech("Scout","Rook"),mech("Scout","Echo")],research:0,prototype:false,bases:{},completed:0,log:["Welcome aboard the carrier Wayfarer."],active:null}}
+export const chassis=id=>CHASSIS.find(x=>x.id===id)||CHASSIS[0],weapon=id=>WEAPONS.find(x=>x.id===id)||WEAPONS[0];
+export const reputation=s=>Math.max(0,...Object.values(s.rep));
+export const capacity=s=>24+s.ship.fuel*12;
+export function pay(s,credits,ore=0){if(s.credits<credits||s.ore<ore)return false;s.credits-=credits;s.ore-=ore;return true}
+export function settle(s,c,won,ore,losses){if(won){s.credits+=c.reward;s.ore+=c.ore;s.rep[c.client]=Math.min(100,s.rep[c.client]+4+c.tier*2);s.rep[c.enemy]=Math.max(-100,s.rep[c.enemy]-2-c.tier);s.completed++}else s.credits+=Math.floor(c.reward*.15);s.ore+=Math.max(0,Math.floor(ore));s.day++;s.active=null;s.log.unshift((won?"Contract complete: ":"Contract failed: ")+c.title+" · "+losses+" chassis lost");s.log=s.log.slice(0,30)}
