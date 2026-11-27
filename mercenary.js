@@ -1,5 +1,5 @@
 import {FACTIONS,CHASSIS,WEAPONS,MODULES,SHIP,BASES,SYSTEMS,chassis,weapon,fresh,mech,fuelCost,capacity,contractSet,reputation,pay,settle} from './mercenary-data.js?v=deep-brood-12';
-import {Battle} from './mercenary-combat.js?v=deep-brood-12';
+import {Battle} from './mercenary-combat.js?v=pilot-ops-13';
 const $=id=>document.getElementById(id),KEY='mechsim-mercenary-v1',fmt=n=>Math.floor(n).toLocaleString(),faction=id=>FACTIONS.find(f=>f.id===id);
 let state=fresh();try{let v=JSON.parse(localStorage.getItem(KEY));if(v?.version===1&&Array.isArray(v.squad)&&SYSTEMS[v.system]&&v.ship&&v.rep)state=v}catch{}if(state.active){settle(state,state.active,false,0,0);state.log.unshift('Interrupted deployment: emergency recovery.')}
 let tab='Galaxy',dest=state.system,battle=null,timer=0;const tabs=['Galaxy','Contracts','Hangar','Shipyard','Research','Outposts','Factions','Log'];
